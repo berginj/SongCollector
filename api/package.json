@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/functions.js",
   "scripts": {
-    "build": "esbuild src/functions.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/functions.js --external:@azure/cosmos --external:@azure/functions --external:@azure/functions-core",
+    "build": "esbuild src/functions.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/functions.js --external:@azure/cosmos --external:@azure/functions --external:@azure/functions-core --external:write-file-atomic",
     "dev": "npm run build && func start",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit"
