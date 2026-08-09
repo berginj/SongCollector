@@ -54,14 +54,32 @@ Public reads and player submission are anonymous by product design. Coach routes
 
 The single shared token is a temporary control. Before broader use, add Entra ID or Static Web Apps authentication, role-based team access, token rotation, rate limiting, an audit trail, and abuse monitoring.
 
-## Azure deployment checklist
+## Azure deployment status
 
-1. Provision Static Web Apps, a serverless Cosmos DB for NoSQL account, a database, a `/partitionKey` container, and Application Insights.
-2. Configure Node 22 and build `app` to `app/dist`; build/deploy `api` as the managed Functions API.
-3. Add `STORAGE_BACKEND=cosmos`, all `COSMOS_*` settings, and a strong random `ADMIN_TOKEN` as environment secrets.
-4. Run `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` in the deployment job.
-5. Run `npm run seed` against production settings from a controlled operator environment.
-6. Smoke-test public team lookup/submission, coach authorization, correction/deletion, and both exports.
-7. Configure alerts for Function errors, Cosmos throttling, and latency. Establish backup/export and secret-rotation procedures.
+The production MVP is deployed in subscription resource group `songcollector-prod-rg`:
 
-There is intentionally no Azure deployment workflow yet: resource names, subscription ownership, environments, and deployment credentials are operator decisions that do not exist in this repository.
+| Resource | Configuration |
+| --- | --- |
+| Static Web Apps | `songcollector527176`, Free SKU, `calm-flower-078db380f.7.azurestaticapps.net` |
+| Managed Functions API | Node 22, code-based v4 registration, same-origin `/api` routes |
+| Cosmos DB | `songcollector527176`, NoSQL Serverless, East US 2, Session consistency, local periodic backup redundancy |
+| Cosmos data | Database `SongCollector`, container `items`, partition key `/partitionKey` |
+| Application Insights | `songcollector527176-ai`, workspace-based, 25% request sampling |
+| Log Analytics | `songcollector527176-law`, 30-day retention, 0.023 GB/day ingestion quota |
+| Cost budget | `songcollector-15-monthly`, $15/month, production resource-group filter |
+
+The checked-in workflow `.github/workflows/azure-static-web-apps-calm-flower-078db380f.yml` deploys `main` with `app_location: app`, `api_location: api`, and `output_location: dist`. It runs through Azure Static Web Apps source integration and requires the generated GitHub Actions deployment secret.
+
+The deployment has been smoke-tested against the public catalog and seeded team. Repository CI-equivalent checks (`npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`) pass.
+
+Remaining operator hardening includes replacing the shared admin token with Entra ID or Static Web Apps authentication, moving Cosmos from account keys to managed identity/data-plane RBAC, adding a custom domain and staging environment, and documenting backup/restore and token-rotation procedures.
+
+## Monitoring and alerts
+
+The `songcollector-alerts` action group emails the signed-in Azure subscription owner. Metric alerts are configured for:
+
+- more than five failed Application Insights requests in five minutes;
+- average Application Insights request duration above two seconds; and
+- any Cosmos DB request with HTTP status 429.
+
+The Log Analytics daily quota is intentionally small for this MVP. Review the Azure Monitor and Cost Management blades periodically; a budget alert is not a hard spending cap.

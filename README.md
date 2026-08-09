@@ -65,11 +65,15 @@ Selecting `cosmos` with any missing Cosmos setting fails explicitly. The applica
 
 ## Production direction
 
-Use Azure Static Web Apps for `app` and its managed Functions API, with Node.js 22 configured by `app/public/staticwebapp.config.json`. Provision an Azure Cosmos DB for NoSQL serverless account, one database, and one container partitioned **exactly** on `/partitionKey`. Set the six application settings above in the Static Web App/Functions environment, run the seed command with production Cosmos settings, and enable Application Insights.
+The production deployment uses Azure Static Web Apps for `app` and its managed Functions API, with Node.js 22 configured by `app/public/staticwebapp.config.json`. The live site is `https://calm-flower-078db380f.7.azurestaticapps.net` in resource group `songcollector-prod-rg`; the Static Web App and Cosmos account are both named `songcollector527176`. Cosmos is serverless, single-region East US 2, and uses database `SongCollector`, container `items`, and partition key `/partitionKey`. The six application settings above are configured in the Static Web App/Functions environment, and the catalog/team seed has been loaded into Cosmos.
 
-Typical build values are repository root as the build root, `app/dist` as the app artifact, and `api` as the API location. The API build produces `api/dist/functions.js`; `api/package.json` points Functions at that bundle. Validate these paths against the selected Static Web Apps build provider before enabling deployment.
+The checked-in workflow at `.github/workflows/azure-static-web-apps-calm-flower-078db380f.yml` deploys on pushes to `main` with `app_location: app`, `api_location: api`, and `output_location: dist`. The API build produces an ESM `api/dist/functions.js` bundle for the Node 22 Functions runtime; the app production TypeScript config excludes test files so Oryx can build the frontend in isolation.
 
-No deployment workflow is checked in because this repository has no Azure resource identifiers or deployment token yet. Operator tasks are listed in [the architecture guide](docs/architecture.md).
+The deployment workflow is created by Azure Static Web Apps source integration and uses the repository's GitHub Actions secret for the Static Web Apps deployment token. Keep that secret and all Azure app settings out of source control.
+
+### Production monitoring
+
+Application Insights (`songcollector527176-ai`) is connected to the 30-day, 0.023-GB/day quota Log Analytics workspace `songcollector527176-law`. Sampling is set to 25% through `APPINSIGHTS_SAMPLING_PERCENTAGE`. The `songcollector-alerts` action group emails the signed-in subscription owner when any of these rules fire: more than five failed API requests in five minutes, average API latency above two seconds, or any Cosmos DB HTTP 429 throttling. The subscription also has the `songcollector-15-monthly` Cost Management budget scoped to the production resource group.
 
 ## Product and security notes
 
