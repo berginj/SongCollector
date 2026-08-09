@@ -20,7 +20,8 @@ function required(params: Params, name: string): string {
 
 function protect(request: HttpRequest, adminToken: string | undefined): void {
   if (!adminToken) throw new ConfigurationError('ADMIN_TOKEN is not configured; administrative endpoints are disabled.');
-  if (request.headers.get('x-admin-token') !== adminToken) throw new AppError(401, 'UNAUTHORIZED', 'A valid X-Admin-Token header is required.');
+  const suppliedToken = request.headers.get('x-admin-token')?.replace(/\s+/g, '');
+  if (suppliedToken !== adminToken?.replace(/\s+/g, '')) throw new AppError(401, 'UNAUTHORIZED', 'A valid X-Admin-Token header is required.');
 }
 
 function safe(operation: (request: HttpRequest) => Promise<HttpResponseInit>): Handler {
