@@ -7,10 +7,13 @@ app.http('getSelections', { methods: ['GET'], authLevel: 'anonymous', route: 'te
 app.http('createSelection', { methods: ['POST'], authLevel: 'anonymous', route: 'teams/{teamId}/selections', handler: configured('createSelection') });
 app.http('getSongs', { methods: ['GET'], authLevel: 'anonymous', route: 'songs', handler: configured('getSongs') });
 app.http('getSong', { methods: ['GET'], authLevel: 'anonymous', route: 'songs/{songId}', handler: configured('getSong') });
+app.http('searchYouTube', { methods: ['GET'], authLevel: 'anonymous', route: 'youtube/search', handler: configured('searchYouTube') });
 app.http('getTeams', { methods: ['GET'], authLevel: 'anonymous', route: 'teams', handler: configured('getTeams') });
 app.http('createTeam', { methods: ['POST'], authLevel: 'anonymous', route: 'teams', handler: configured('createTeam') });
 app.http('updateTeam', { methods: ['PATCH'], authLevel: 'anonymous', route: 'teams/{teamId}', handler: configured('updateTeam') });
 app.http('updateSelection', { methods: ['PATCH'], authLevel: 'anonymous', route: 'selections/{selectionId}', handler: configured('updateSelection') });
 app.http('deleteSelection', { methods: ['DELETE'], authLevel: 'anonymous', route: 'selections/{selectionId}', handler: configured('deleteSelection') });
+app.http('previewBallparkImport', { methods: ['POST'], authLevel: 'anonymous', route: 'teams/{teamId}/import/ballparkdj/preview', handler: configured('previewBallparkImport') });
+app.http('confirmBallparkImport', { methods: ['POST'], authLevel: 'anonymous', route: 'teams/{teamId}/import/ballparkdj/confirm', handler: configured('confirmBallparkImport') });
 app.http('exportCsv', { methods: ['GET'], authLevel: 'anonymous', route: 'teams/{teamId}/export.csv', handler: configured('exportCsv') });
 app.http('exportText', { methods: ['GET'], authLevel: 'anonymous', route: 'teams/{teamId}/export.txt', handler: configured('exportText') });

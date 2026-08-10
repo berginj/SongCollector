@@ -13,6 +13,16 @@ The base path is `/api`. JSON success responses are `{ "data": value }`; JSON er
 | `GET` | `/songs` | Curated catalog |
 | `GET` | `/songs/:songId` | Catalog song |
 
+BallparkDJ import and YouTube lookup are admin-protected:
+
+| Method | Route | Result |
+| --- | --- | --- |
+| `POST` | `/teams/:teamId/import/ballparkdj/preview` | Parse CSV, match catalog titles, identify conflicts, and return row-level actions |
+| `POST` | `/teams/:teamId/import/ballparkdj/confirm` | Apply explicitly selected create/update/skip actions |
+| `GET` | `/youtube/search?title=…&artist=…` | Return up to five coach-selectable YouTube candidates |
+
+The preview accepts `Number, FirstName, LastName, SongName, SongStart, SongLength, SongOverlap`. Unmatched rows require a coach-entered artist and URL. Import never uses a player name or jersey number as record identity, and jersey collisions require an explicit override. YouTube lookup is server-side and optional: set `YOUTUBE_API_KEY` to use the official Data API; without it, curated matches and manual URLs continue to work.
+
 Create-selection body:
 
 ```json

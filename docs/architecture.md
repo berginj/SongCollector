@@ -13,6 +13,12 @@ React/Vite → HTTP envelope + X-Admin-Token → Functions handlers
 
 All success payloads use `{ "data": ... }`. All handled failures use `{ "error": { "code", "message", "fieldErrors?", "details?" } }`. Unexpected failures are logged by Functions and return a generic message without internal details.
 
+## BallparkDJ import and YouTube enrichment
+
+Coaches can paste or upload a BallparkDJ CSV in the team admin page. The API parses quoted fields, preserves jersey strings such as `07`, normalizes names and titles for matching, and returns a preview before any write. Exact catalog matches supply canonical artist, URL, video ID, and recommended start. Unmatched rows require coach-entered metadata; duplicate jerseys and ambiguous matches are shown as conflicts. The confirm request carries explicit row IDs and `create`, `update`, or `skip` actions.
+
+The API exposes a `YouTubeSearchProvider` boundary backed by the official YouTube Data API v3 when `YOUTUBE_API_KEY` is present. It searches `title + artist`, limits results to music videos, returns five candidates, and lets the coach choose the canonical HTTPS watch URL. Add caching, rate limiting, and review heuristics before broad use. Never scrape pages or auto-approve a candidate based only on a title match.
+
 ## Data rules
 
 - IDs are server-generated UUIDs except stable catalog song IDs.

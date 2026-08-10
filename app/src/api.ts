@@ -1,4 +1,7 @@
-import type { ApiDataBody, ApiErrorBody, PlayerSelection, Song, Team } from '@songcollector/shared';
+import type { ApiDataBody, ApiErrorBody, BallparkImportCommitResult, BallparkImportPreview, PlayerSelection, Song, Team } from '@songcollector/shared';
+
+export interface YouTubeCandidate { videoId: string; title: string; channelTitle: string; url: string; thumbnailUrl?: string }
+export interface YouTubeSearchResult { configured: boolean; query: string; candidates: YouTubeCandidate[] }
 
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string, public readonly fieldErrors?: Record<string, string[]>, public readonly details?: unknown) { super(message); }
@@ -27,6 +30,9 @@ export const api = {
   selections: (teamId: string) => request<PlayerSelection[]>(`/teams/${teamId}/selections`),
   createSelection: (teamId: string, value: Record<string, unknown>) => request<{ selection: PlayerSelection; warnings: Array<{ code: string; message: string }> }>(`/teams/${teamId}/selections`, { method: 'POST', body: JSON.stringify(value) }),
   updateSelection: (id: string, value: Record<string, unknown>, token: string) => request<{ selection: PlayerSelection; warnings: Array<{ code: string; message: string }> }>(`/selections/${id}`, { method: 'PATCH', body: JSON.stringify(value) }, token),
+  previewBallparkImport: (teamId: string, csv: string, token: string) => request<BallparkImportPreview>(`/teams/${teamId}/import/ballparkdj/preview`, { method: 'POST', body: JSON.stringify({ csv }) }, token),
+  confirmBallparkImport: (teamId: string, rows: unknown[], token: string) => request<BallparkImportCommitResult>(`/teams/${teamId}/import/ballparkdj/confirm`, { method: 'POST', body: JSON.stringify({ rows }) }, token),
+  youtubeSearch: (title: string, artist: string, token: string) => request<YouTubeSearchResult>(`/youtube/search?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`, {}, token),
   deleteSelection: (id: string, token: string) => request<void>(`/selections/${id}`, { method: 'DELETE' }, token),
   songs: () => request<Song[]>('/songs'),
   song: (id: string) => request<Song>(`/songs/${encodeURIComponent(id)}`),
