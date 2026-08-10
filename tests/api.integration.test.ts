@@ -83,4 +83,15 @@ describe('API integration with local persistence', () => {
     const response = await handlers.getTeams(request('GET'), context);
     expect(response.status).toBe(503); expect(error(response).code).toBe('STORAGE_CONFIGURATION_ERROR');
   });
+
+  it('previews and commits a BallparkDJ import with catalog matching', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'songcollector-api-')); directories.push(directory);
+    const repositories = createLocalRepositories(directory); const service = new SongCollectorService(repositories); const handlers = createApiHandlers(service, 'test-admin-token');
+    const team = data<Team>(await handlers.createTeam(request('POST', {}, { name: 'Import Team', slug: 'import-team' }, 'test-admin-token'), context));
+    await service.seed([{ id: 'catalog-song', title: 'Catalog Import Song', artist: 'Import Artist', youtubeUrl: 'https://www.youtube.com/watch?v=ZbZSe6N_BXs', youtubeVideoId: 'ZbZSe6N_BXs', recommendedStartSeconds: 8, genres: [], eras: [], vibes: [], requiresReview: true }], false);
+    const preview = await handlers.previewBallparkImport(request('POST', { teamId: team.id }, { csv: 'Number,FirstName,LastName,SongName,SongStart\n07,Taylor,,Catalog Import Song,0:08' }, 'test-admin-token'), context);
+    expect(preview.status).toBe(200); const value = data<{ rows: Array<{ action: string; songId?: string }>; matched: number }>(preview); expect(value.matched).toBe(1); expect(value.rows[0]?.action).toBe('create'); expect(value.rows[0]?.songId).toBe('catalog-song');
+    const committed = await handlers.confirmBallparkImport(request('POST', { teamId: team.id }, { rows: [{ rowId: 'ballpark-row-1', action: 'create', playerName: 'Taylor', jerseyNumber: '07', songTitle: 'Catalog Import Song', artist: 'Import Artist', youtubeUrl: 'https://youtu.be/ZbZSe6N_BXs', startTime: '0:08', songId: 'catalog-song' }] }, 'test-admin-token'), context);
+    expect(committed.status).toBe(200); expect(data<{ created: number }>(committed).created).toBe(1); expect(await repositories.selections.listByTeam(team.id)).toHaveLength(1);
+  });
 });

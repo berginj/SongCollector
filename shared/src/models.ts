@@ -78,11 +78,69 @@ export const updateSelectionSchema = z.object({
   allowDuplicateJersey: z.boolean().optional().default(false),
 }).refine((value) => Object.keys(value).some((key) => key !== 'allowDuplicateJersey'), 'Provide at least one field.');
 
+export const ballparkImportActionSchema = z.enum(['create', 'update', 'skip']);
+export const ballparkImportCommitRowSchema = z.object({
+  rowId: z.string().min(1),
+  existingSelectionId: z.string().uuid().optional(),
+  action: ballparkImportActionSchema,
+  playerName: z.string().trim().min(1).max(100),
+  jerseyNumber: z.string().trim().min(1).max(12),
+  songTitle: z.string().trim().min(1).max(160),
+  artist: optionalTrimmed,
+  youtubeUrl: optionalTrimmed,
+  startTime: optionalTrimmed,
+  songId: optionalTrimmed,
+  allowDuplicateJersey: z.boolean().optional().default(false),
+});
+export const ballparkImportCommitSchema = z.object({
+  rows: z.array(ballparkImportCommitRowSchema).min(1).max(250),
+});
+export const ballparkImportPreviewRequestSchema = z.object({
+  csv: z.string().trim().min(1).max(2_000_000),
+});
+
 export type Team = z.infer<typeof teamSchema>;
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 export type Song = z.infer<typeof songSchema>;
 export type PlayerSelection = z.infer<typeof playerSelectionSchema>;
 export type CreateSelectionInput = z.infer<typeof createSelectionSchema>;
+export type BallparkImportAction = z.infer<typeof ballparkImportActionSchema>;
+export type BallparkImportCommitRow = z.infer<typeof ballparkImportCommitRowSchema>;
+export type BallparkImportPreviewRequest = z.infer<typeof ballparkImportPreviewRequestSchema>;
+
+export type BallparkImportStatus = 'matched' | 'unmatched' | 'conflict' | 'invalid';
+export interface BallparkImportPreviewRow {
+  rowId: string;
+  lineNumber: number;
+  playerName: string;
+  jerseyNumber: string;
+  songTitle: string;
+  startTimeSeconds?: number;
+  songLength?: string;
+  songOverlap?: string;
+  artist?: string;
+  youtubeUrl?: string;
+  songId?: string;
+  existingSelectionId?: string;
+  existingPlayerName?: string;
+  status: BallparkImportStatus;
+  issues: string[];
+  action: BallparkImportAction;
+}
+
+export interface BallparkImportPreview {
+  rows: BallparkImportPreviewRow[];
+  matched: number;
+  unmatched: number;
+  conflicts: number;
+}
+
+export interface BallparkImportCommitResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: Array<{ rowId: string; message: string }>;
+}
 
 export interface DuplicateWarning {
   code: 'DUPLICATE_SONG';
